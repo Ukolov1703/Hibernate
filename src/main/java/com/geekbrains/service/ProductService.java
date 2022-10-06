@@ -1,4 +1,17 @@
 package com.geekbrains.service;
 
-public class ProductService {
+import com.geekbrains.persistence.entities.Product;
+
+import java.util.List;
+
+public interface ProductService {
+
+    List<Product> getProductList();
+
+    void saveOrUpdate(Product product);
+
+    Product getProductById(Long id);
+
+    void deleteById(Long id);
+
 }
