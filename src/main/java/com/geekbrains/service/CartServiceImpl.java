@@ -2,11 +2,13 @@ package com.geekbrains.service;
 
 
 import com.geekbrains.persistence.Cart;
+import com.geekbrains.persistence.entities.CartEntry;
 import com.geekbrains.persistence.entities.Product;
 import com.geekbrains.persistence.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,11 +16,15 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+//@Scope(value = WebApplicationContext.SCOPE_SESSION, proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class CartServiceImpl implements CartService {
+
+    private final EntityManager em;
 
     private final ProductRepository productRepository;
 
-    public CartServiceImpl(ProductRepository productRepository) {
+    public CartServiceImpl(EntityManager em, ProductRepository productRepository) {
+        this.em = em;
         this.productRepository = productRepository;
     }
 
@@ -27,6 +33,14 @@ public class CartServiceImpl implements CartService {
     public Cart getNewCart() {
         return null;
     }
+
+    public List<CartEntry> findAllProductsById(Long orderId) {
+        List<CartEntry> cartEntryList = em.createQuery("FROM CartEntry c WHERE c.order_id = :orderId")
+                .setParameter("order_id", orderId)
+                .getResultList();
+        return cartEntryList;
+    }
+
 
     @Override
     public void addProduct(Cart cart, Product product, Integer quantity) {
@@ -46,6 +60,7 @@ public class CartServiceImpl implements CartService {
 
     public void printCart(Cart cart) {
         BigDecimal sum = BigDecimal.valueOf(0);
+        // NOTE: т.к. это мапа, сортировки нет
         for (Map.Entry<Product, Integer> entryMap : cart.getCartMap().entrySet()) {
             Product product = entryMap.getKey();
             BigDecimal prodSum = product.getPrice().multiply(BigDecimal.valueOf(entryMap.getValue()));
@@ -92,4 +107,5 @@ public class CartServiceImpl implements CartService {
         });
         return cartList;
     }
+
 }

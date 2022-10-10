@@ -1,6 +1,7 @@
 package com.geekbrains.service;
 
 import com.geekbrains.persistence.Cart;
+import com.geekbrains.persistence.entities.CartEntry;
 import com.geekbrains.persistence.entities.Product;
 
 import java.math.BigDecimal;
@@ -23,4 +24,6 @@ public interface CartService {
     int getProductQuantity(Cart cart, Long prodId);
 
     List<Product> getCartListSorted(Cart cart);
+
+    List<CartEntry> findAllProductsById(Long orderId);
 }
