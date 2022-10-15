@@ -1,17 +1,20 @@
 package com.geekbrains.persistence.repositories;
 
 import com.geekbrains.persistence.entities.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
 import java.util.List;
 
-public interface ProductRepository {
+@Repository
+public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    List<Product> findAll();
+    List<Product> findProductByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice);
 
-    List<Product> findAllSortedByName();
+    List<Product> findProductByPriceLessThan(BigDecimal maxPrice);
 
-    Product findById(Long id);
+    List<Product> findProductByPriceGreaterThan(BigDecimal minPrice);
 
-    void deleteById(Long id);
-
-    void saveOrUpdate(Product product);
+    List<Product> findProductByName(String name);
 }
