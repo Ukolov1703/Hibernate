@@ -20,6 +20,10 @@ import java.util.Map;
 public class CartServiceImpl implements CartService {
 
     private final EntityManager em;
+// TODO: исправить в очередном ДЗ
+//    @Lezenford (https://github.com/Lezenford) 4 hours ago
+//    осталось от времен до JPA, стоит переложить все на JPA, что еще работает на entityManager, это повысит
+//    единообразие кода. не стоит без веской причины мешать несколько подходов
 
     private final ProductRepository productRepository;
 
@@ -35,27 +39,30 @@ public class CartServiceImpl implements CartService {
     }
 
     public List<CartEntry> findAllProductsById(Long orderId) {
-        List<CartEntry> cartEntryList = em.createQuery("FROM CartEntry c WHERE c.order_id = :orderId")
+        return em.createQuery("FROM CartEntry c WHERE c.order_id = :orderId", CartEntry.class)
                 .setParameter("order_id", orderId)
                 .getResultList();
-        return cartEntryList;
     }
-
 
     @Override
     public void addProduct(Cart cart, Product product, Integer quantity) {
-        cart.addProduct(product, quantity);
+        if (product != null) cart.getCartMap().merge(product, quantity, Integer::sum);
+        if (cart.getCartMap().get(product) < 1) cart.getCartMap().remove(product);
     }
 
     @Override
     public void addProduct(Cart cart, Long prodId, Integer quantity) {
-        Product product = productRepository.findById(prodId);
+        Product product = productRepository.findById(prodId).get();
         this.addProduct(cart, product, quantity);
     }
 
     @Override
     public BigDecimal getSum(Cart cart) {
-        return cart.getSum();
+        BigDecimal sum = BigDecimal.valueOf(0);
+        for (Map.Entry<Product, Integer> entry : cart.getCartMap().entrySet()) {
+            sum = sum.add(entry.getKey().getPrice().multiply(BigDecimal.valueOf(entry.getValue())));
+        }
+        return sum;
     }
 
     public void printCart(Cart cart) {
@@ -90,7 +97,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public int getProductQuantity(Cart cart, Long prodId) {
-        Product product = productRepository.findById(prodId);
+        Product product = productRepository.findById(prodId).get();
         return this.getProductQuantity(cart, product);
     }
 
