@@ -1,21 +1,42 @@
 package com.geekbrains.service;
 
-import com.geekbrains.persistence.entities.Product;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import ru.geekbrains.persistence.entities.Product;
+import ru.geekbrains.persistence.repositories.ProductRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
-public interface ProductService {
+@AllArgsConstructor
+@Service
+public class ProductService {
+    private final ProductRepository productRepository;
 
-    List<Product> getProductList();
+    public List<Product> findAll() {
+        return productRepository.findAll();
+    }
 
-    void saveOrUpdate(Product product);
+    public Page<Product> findAllFilteredPaged(BigDecimal minPrice, BigDecimal maxPrice, String partTitle, Integer pageIndex, Integer productsPerPage) {
+        Pageable pageRequest = PageRequest.of(pageIndex - 1, productsPerPage);
+        Page<Product> productPage = productRepository.findProductsByPriceBetweenAndTitleLike(minPrice, maxPrice, "%"+partTitle+"%", pageRequest);
+        return productPage;
+    }
 
-    Product getProductById(Long id);
+    public Optional<Product> findProductById(Long id) {
+        return productRepository.findById(id);
+    }
 
-    void deleteById(Long id);
+    public Product saveOrUpdateProduct(Product product) {
+        return productRepository.save(product);
+    }
 
-    Page<Product> getProductsFiltered(BigDecimal minPrice, BigDecimal maxPrice, String partName, Integer pageNum, Integer productsPerPage);
+    public void deleteProductById(Long id) {
+        productRepository.deleteById(id);
+    }
+
 }
-

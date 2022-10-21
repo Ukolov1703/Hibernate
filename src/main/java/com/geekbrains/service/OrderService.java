@@ -1,8 +1,5 @@
 package com.geekbrains.service;
 
-import com.geekbrains.persistence.Cart;
-import com.geekbrains.persistence.entities.CartEntry;
-import com.geekbrains.persistence.entities.Product;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 import ru.geekbrains.persistence.Cart;
+import ru.geekbrains.persistence.entities.Order;
 import ru.geekbrains.persistence.entities.Product;
 import ru.geekbrains.persistence.repositories.CartEntryRepository;
 import ru.geekbrains.persistence.repositories.OrderRepository;
@@ -24,16 +22,18 @@ import java.util.Map;
 @Data
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 //@Scope(value = WebApplicationContext.SCOPE_SESSION, proxyMode = ScopedProxyMode.TARGET_CLASS)
-public class CartService {
+public class OrderService {
 
     private final OrderRepository orderRepository;
-    //    private final CartEntryRepository cartEntryRepository;
+    private final CartEntryRepository cartEntryRepository;
     private final ProductService productService;
 
-    @Lookup
-    public Cart getNewCart() {
-        return null;
+    public Order newOrder() {
+        Order order = new Order();
+        orderRepository.save(order);
+        return order;
     }
+
 
     public void addProduct(Cart cart, Product product, Integer quantity) {
         if (product != null) cart.getCartMap().merge(product, quantity, Integer::sum);
