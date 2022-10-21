@@ -1,6 +1,5 @@
 package com.geekbrains.persistence.entities;
 
-import com.geekbrains.persistence.Cart;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -29,7 +28,7 @@ public class Order {
             inverseJoinColumns = @JoinColumn(name = "product_id"))
     private List<Product> products;
 
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
     private List<CartEntry> cartEntries;
 
     @Override
