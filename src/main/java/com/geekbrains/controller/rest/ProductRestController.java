@@ -1,76 +1,45 @@
 package com.geekbrains.controller.rest;
 
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import com.geekbrains.controller.ProductController;
+import com.geekbrains.persistence.entities.Product;
+import com.geekbrains.persistence.repositories.ProductRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
-import ru.geekbrains.controllers.ProductController;
-import ru.geekbrains.persistence.dtos.ProductDto;
-import ru.geekbrains.persistence.entities.Product;
-import ru.geekbrains.persistence.mapper.ProductConverter;
-import ru.geekbrains.service.ProductService;
 
-import java.math.BigDecimal;
+import javax.persistence.NoResultException;
+import java.util.List;
 
 @RestController
-@AllArgsConstructor(onConstructor = @__(@Autowired))
 @RequestMapping("/api/v1/products")
 public class ProductRestController {
 
-    private final ProductService productService;
+    private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
+    private final ProductRepository productRepository;
 
-    @GetMapping("")
-    public ResponseEntity<?> getAllProducts(@RequestParam(defaultValue = "1") Integer pageIndex,
-                                            @RequestParam(defaultValue = "0") BigDecimal minPrice,
-                                            @RequestParam(defaultValue = "1000000") BigDecimal maxPrice,
-                                            @RequestParam(defaultValue = "") String partTitle,
-                                            @RequestParam(defaultValue = "5") Integer productsPerPage) {
-        Page<Product> page = productService.findAllFilteredPaged(minPrice, maxPrice, partTitle, pageIndex, productsPerPage);
-//        page.getContent().stream().forEach(() -> );
-        if (page.getContent().size() > 0) {
-            return ResponseEntity.ok(page.getContent());
-        }
-        return ResponseEntity.badRequest().build();
+    public ProductRestController(ProductRepository productRepository) {
+        this.productRepository = productRepository;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getProductById(@PathVariable Long id) {
-        if (productService.findProductById(id).isPresent()) {
-            Product product = productService.findProductById(id).get();
-            return ResponseEntity.ok(new ProductConverter().fromProduct(product));
-        }
-        return ResponseEntity.notFound().build();
+    @GetMapping(value = "/{id}")
+    public Product getProductById (@PathVariable Long id) {
+        return productRepository.findById(id).orElseThrow(() ->
+                new NoResultException("Товар с указанным id (" + id + ") не существует!"));
     }
 
-    @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createProduct(@RequestBody ProductDto productDto) {
-        if (productDto.getId() == null) {
-            Product product = new ProductConverter().toProduct(productDto);
-            return ResponseEntity.ok(productService.saveOrUpdateProduct(product));
-        }
-        return new ResponseEntity<>(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);
+    @GetMapping(value = "/")
+    public List<Product> getAllProducts () {
+        return productRepository.findAll();
     }
 
-    @PutMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateProduct(@RequestBody ProductDto productDto) {
-        if (productDto.getId() != null) {
-            Product product = new ProductConverter().toProduct(productDto);
-            return ResponseEntity.ok(productService.saveOrUpdateProduct(product));
-        }
-        return new ResponseEntity<>(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);
+    @PostMapping(value = "/")
+    public Product saveProduct(Product product) {
+        return productRepository.save(product);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProductById(@PathVariable Long id) {
-        if (productService.findProductById(id).isPresent()) {
-            productService.deleteProductById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    @GetMapping(value = "/delete/{id}")
+    public void deleteProductById (@PathVariable Long id) {
+        productRepository.deleteById(id);
     }
 
 }
